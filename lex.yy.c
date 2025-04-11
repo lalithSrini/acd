@@ -474,8 +474,8 @@ int yy_flex_debug = 0;
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
 char *yytext;
-#line 1 "lex1.l"
-#line 4 "lex1.l"
+#line 1 "5lex1.l"
+#line 4 "5lex1.l"
 #include<stdio.h>
 int k,c,d,i,s,o;
 #line 481 "lex.yy.c"
@@ -696,7 +696,7 @@ YY_DECL
 		}
 
 	{
-#line 8 "lex1.l"
+#line 8 "5lex1.l"
 
 #line 701 "lex.yy.c"
 
@@ -757,38 +757,38 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 9 "lex1.l"
+#line 9 "5lex1.l"
 {printf("keyword"); k++;}
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 10 "lex1.l"
+#line 10 "5lex1.l"
 {printf("Identifier"); i++;}
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 11 "lex1.l"
+#line 11 "5lex1.l"
 {printf("digit"); d++;}
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 12 "lex1.l"
+#line 12 "5lex1.l"
 {printf("operator"); o++;}
 	YY_BREAK
 case 5:
 /* rule 5 can match eol */
 YY_RULE_SETUP
-#line 13 "lex1.l"
+#line 13 "5lex1.l"
 {printf("delimeter"); c++;}
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 14 "lex1.l"
+#line 14 "5lex1.l"
 {printf("symbols"); s++;}
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 15 "lex1.l"
+#line 15 "5lex1.l"
 ECHO;
 	YY_BREAK
 #line 794 "lex.yy.c"
@@ -1796,7 +1796,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 15 "lex1.l"
+#line 15 "5lex1.l"
 
 
 int main(void)

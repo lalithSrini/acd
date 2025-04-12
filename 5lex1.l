@@ -1,5 +1,3 @@
-
-
 %{
 #include<stdio.h>
 int k,c,d,i,s,o;

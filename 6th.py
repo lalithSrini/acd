@@ -1,4 +1,3 @@
-import collections
 
 class FirstFollow:
     def __init__(self, grammar):

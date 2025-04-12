@@ -31,6 +31,8 @@ int yywrap()
 return 1;
 }
 
+
+
 // terminal ->
 // flex lex1.l
 // gcc lex.yy.c -o lex1 -lfl

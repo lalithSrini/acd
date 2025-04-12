@@ -1,0 +1,506 @@
+exp 08  ACD 
+
+
+
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#define MAX 100
+#define STATES 3
+#define SYMBOLS 3
+
+int parse_table[STATES][SYMBOLS];
+
+void construct_parse_table() {
+    // Initialize all values to -1 (error state)
+    for (int i = 0; i < STATES; i++) {
+        for (int j = 0; j < SYMBOLS; j++) {
+            parse_table[i][j] = -1;
+        }
+    }
+    // Define valid transitions
+    parse_table[0][0] = 1; // State 0, 'a' → State 1
+    parse_table[1][1] = 2; // State 1, 'b' → State 2
+    parse_table[2][2] = 2; // State 2, '$' → Accepting State (Remain in State 2)
+}
+
+void print_parse_table() {
+    printf("\nParsing Table:\n");
+    printf("    a    b    $\n");
+    printf("  ----------------\n");
+    for (int i = 0; i < STATES; i++) {
+        printf("%d |", i);
+        for (int j = 0; j < SYMBOLS; j++) {
+            if (parse_table[i][j] == -1)
+                printf("  -   ");
+            else if (parse_table[i][j] == 2 && j == 2)
+                printf("Accept");
+            else
+                printf("  S%d  ", parse_table[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+void print_productions() {
+    printf("\nGrammar Productions:\n");
+    printf("S → a B\n");
+    printf("B → b\n");
+}
+
+char stack[MAX];
+int top = -1;
+
+void push(char c) {
+    stack[++top] = c;
+}
+
+char pop() {
+    return (top == -1) ? '$' : stack[top--];
+}
+
+void displayStack() {
+    for (int i = 0; i <= top; i++) {
+        printf("%c ", stack[i]);
+    }
+    printf("\n");
+}
+
+int main() {
+    construct_parse_table(); // Construct parse table dynamically
+    print_parse_table(); // Print the parsing table
+    print_productions(); // Print grammar productions
+    
+    char input[MAX];
+    int state = 0, i = 0;
+    printf("\nEnter the string to be parsed: ");
+    scanf("%s", input);
+    strcat(input, "$"); // End marker
+    push('0'); // Initial state
+    
+    while (input[i] != '\0') {
+        int symbol;
+        if (input[i] == 'a')
+            symbol = 0;
+        else if (input[i] == 'b')
+            symbol = 1;
+        else if (input[i] == '$')
+            symbol = 2;
+        else {
+            printf("Invalid symbol encountered!\n");
+            return 1;
+        }
+        
+        int action = parse_table[state][symbol];
+        if (action == -1) {
+            printf("String not accepted!\n");
+            return 1;
+        } else {
+            push(input[i]);
+            state = action;
+        }
+        i++;
+    }
+    
+    if (state == 2) {
+        printf("String accepted!\n");
+    } else {
+        printf("String not accepted!\n");
+    }
+    
+    return 0;
+}
+
+
+
+
+
+expr 9
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#define MAX 100
+
+int tempVar = 1;  // Counter for temporary variables
+int addr = 100;   // Address counter for TAC
+
+void assignmentTAC();
+void arithmeticTAC();
+void relationalTAC();
+void generateTAC(char expr[]);
+
+int main() {
+    int choice;
+    while (1) {
+        printf("\n1. Assignment\n2. Arithmetic\n3. Relational\n4. Exit\nEnter your choice: ");
+        scanf("%d", &choice);
+        switch (choice) {
+            case 1: assignmentTAC(); break;
+            case 2: arithmeticTAC(); break;
+            case 3: relationalTAC(); break;
+            case 4: exit(0);
+            default: printf("Invalid choice! Try again.\n");
+        }
+    }
+}
+
+// Assignment Expression TAC
+void assignmentTAC() {
+    char expr[MAX], lhs[MAX], rhs[MAX];
+
+    printf("\nEnter assignment (e.g., a=b): ");
+    scanf("%s", expr);
+    char *equalSign = strchr(expr, '=');
+    if (!equalSign) {
+        printf("Invalid assignment!\n");
+        return;
+    }
+    strncpy(lhs, expr, equalSign - expr);
+    lhs[equalSign - expr] = '\0';
+    strcpy(rhs, equalSign + 1);
+    printf("T%d = %s\n", tempVar, rhs);
+    printf("%s = T%d\n", lhs, tempVar++);
+}
+
+// Arithmetic Expression TAC (Handles Operator Precedence)
+void arithmeticTAC() {
+    char expr[MAX];
+    printf("\nEnter arithmetic expression (e.g., a+b-c): ");
+    scanf("%s", expr);
+    generateTAC(expr);
+}
+
+// Generate TAC for Arithmetic Expressions
+void generateTAC(char expr[]) {
+    char opStack[MAX], operandStack[MAX][MAX]; // Stacks for operators & operands
+    int topOp = -1, topOperand = -1;
+    int i = 0;
+    while (expr[i] != '\0') {
+        if (isalnum(expr[i])) { // Operand (variable or number)
+            char temp[2] = {expr[i], '\0'};
+            strcpy(operandStack[++topOperand], temp);
+        } else { // Operator (+, -, *, /)
+            while (topOp != -1 && ((opStack[topOp] == '*' || opStack[topOp] == '/') ||
+                   ((expr[i] == '+' || expr[i] == '-') && (opStack[topOp] == '+' || opStack[topOp] == '-')))) {
+                // Process previous operator
+                char operand2[MAX], operand1[MAX], op;
+                strcpy(operand2, operandStack[topOperand--]);
+                strcpy(operand1, operandStack[topOperand--]);
+                op = opStack[topOp--];
+                printf("T%d = %s %c %s\n", tempVar, operand1, op, operand2);
+                char tempRes[MAX];
+                sprintf(tempRes, "T%d", tempVar++);
+                strcpy(operandStack[++topOperand], tempRes);
+            }
+            opStack[++topOp] = expr[i]; // Push current operator
+        }
+        i++;
+    }
+    while (topOp != -1) { // Process remaining operators
+        char operand2[MAX], operand1[MAX], op;
+        strcpy(operand2, operandStack[topOperand--]);
+        strcpy(operand1, operandStack[topOperand--]);
+        op = opStack[topOp--];
+
+        printf("T%d = %s %c %s\n", tempVar, operand1, op, operand2);
+        char tempRes[MAX];
+        sprintf(tempRes, "T%d", tempVar++);
+        strcpy(operandStack[++topOperand], tempRes);
+    }
+}
+
+// Relational Expression TAC
+void relationalTAC() {
+    char expr[MAX], id1[MAX], id2[MAX], op[3];
+
+    printf("\nEnter relational expression (e.g., A<B, A>=B, A==B): ");
+    scanf("%s", expr);
+
+    // Extract operand 1, operator, and operand 2
+    if (sscanf(expr, "%[a-zA-Z0-9]%2[<>=!]%[a-zA-Z0-9]", id1, op, id2) != 3) {
+        printf("Invalid relational expression!\n");
+        return;
+    }
+
+    // Generate TAC for relational expression
+    printf("\n%d: if (%s %s %s) goto %d", addr, id1, op, id2, addr + 3);
+    addr++;
+    printf("\n%d: T = 0", addr++);
+    printf("\n%d: goto %d", addr++, addr + 1);
+    printf("\n%d: T = 1\n", addr++);
+}
+
+
+
+exp 11
+
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+#define MAX 100
+
+void generateTAC(char statement[]);
+
+int main() {
+    int n;
+    char statements[MAX][MAX];
+
+    printf("Enter the number of statements: ");
+    scanf("%d", &n);
+
+    printf("Enter expressions (e.g., a=b+c):\n");
+    for (int i = 0; i < n; i++) {
+        scanf("%s", statements[i]);
+    }
+
+    printf("\nGenerated Three Address Code (TAC):\n");
+    for (int i = 0; i < n; i++) {
+        generateTAC(statements[i]);
+    }
+    return 0;
+}
+
+// Function to generate Three Address Code (TAC)
+void generateTAC(char statement[]) {
+    int len = strlen(statement);
+    int reg = 1;
+    
+    char lhs = statement[0];  // Left-hand side variable
+    char op = '\0';           // Operator (+, -, *, /)
+    char operands[2] = {'\0', '\0'};
+    int opIdx = 0;
+    
+    // Extract operator and operands
+    for (int i = 2; i < len; i++) {
+        if (isalpha(statement[i])) {  // If character is an operand (a-z)
+            operands[opIdx++] = statement[i];
+            printf("LOAD R%d %c\n", reg++, statement[i]);
+        } else if (strchr("+-*/", statement[i])) {  // If operator found
+            op = statement[i];
+        }
+    }
+
+    // Perform operation
+    if (opIdx == 2) {  // Ensure both operands are present
+        switch (op) {
+            case '+': printf("ADD R%d R%d\n", reg - 2, reg - 1); break;
+            case '-': printf("SUB R%d R%d\n", reg - 2, reg - 1); break;
+            case '*': printf("MUL R%d R%d\n", reg - 2, reg - 1); break;
+            case '/': printf("DIV R%d R%d\n", reg - 2, reg - 1); break;
+            default: printf("Error: Unsupported operator!\n"); return;
+        }
+        printf("STORE %c R%d\n", lhs, reg - 2);
+    }
+}
+
+
+
+exp 10
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+#define MAX 100
+
+typedef struct {
+    char op[10];
+    char arg1[10];
+    char arg2[10];
+    char result[10];
+} Quadruple;
+
+typedef struct {
+    char op[10];
+    char arg1[10];
+    char arg2[10];
+} Triple;
+
+typedef struct {
+    int index;
+    int arg1;
+    int arg2;
+} IndirectTriple;
+
+Quadruple quadruples[MAX];
+Triple triples[MAX];
+IndirectTriple indirectTriples[MAX];
+
+int qIndex = 0, tIndex = 0, itIndex = 0;
+int tempVarCount = 1; // To generate temporary variable names (t1, t2, ...)
+
+// Stack implementation for infix to postfix conversion
+char stack[MAX][10];
+int top = -1;
+
+void push(char *str) {
+    strcpy(stack[++top], str);
+}
+
+char *pop() {
+    if (top == -1) return "";
+    return stack[top--];
+}
+
+int precedence(char op) {
+    if (op == '+' || op == '-') return 1;
+    if (op == '*' || op == '/') return 2;
+    if (op == 'u') return 3; // Unary minus has the highest precedence
+    return 0;
+}
+
+// Convert infix to postfix using Shunting Yard Algorithm
+void infixToPostfix(char infix[], char postfix[][10], int *postfixLen) {
+    char token[10];
+    int j = 0, k = 0;
+
+    for (int i = 0; infix[i] != '\0'; i++) {
+        if (isalnum(infix[i])) {
+            token[k++] = infix[i];
+        } else {
+            if (k > 0) {
+                token[k] = '\0';
+                strcpy(postfix[j++], token);
+                k = 0;
+            }
+
+            if (infix[i] == '(') {
+                push("(");
+            } else if (infix[i] == ')') {
+                while (top != -1 && strcmp(stack[top], "(") != 0) {
+                    strcpy(postfix[j++], pop());
+                }
+                pop();
+            } else {
+                while (top != -1 && precedence(stack[top][0]) >= precedence(infix[i])) {
+                    strcpy(postfix[j++], pop());
+                }
+                char op[2] = {infix[i], '\0'};
+                push(op);
+            }
+        }
+    }
+
+    if (k > 0) {
+        token[k] = '\0';
+        strcpy(postfix[j++], token);
+    }
+
+    while (top != -1) {
+        strcpy(postfix[j++], pop());
+    }
+
+    *postfixLen = j;
+}
+
+// Generate a temporary variable name
+void generateTempVar(char *temp) {
+    sprintf(temp, "t%d", tempVarCount++);
+}
+
+// Generate quadruples
+void generateQuadruple(char *op, char *arg1, char *arg2, char *result) {
+    strcpy(quadruples[qIndex].op, op);
+    strcpy(quadruples[qIndex].arg1, arg1);
+    strcpy(quadruples[qIndex].arg2, arg2);
+    strcpy(quadruples[qIndex].result, result);
+    qIndex++;
+}
+
+// Generate triples
+void generateTriple(char *op, char *arg1, char *arg2) {
+    strcpy(triples[tIndex].op, op);
+    strcpy(triples[tIndex].arg1, arg1);
+    strcpy(triples[tIndex].arg2, arg2);
+
+    indirectTriples[itIndex].index = tIndex;
+    indirectTriples[itIndex].arg1 = (arg1[0] == 't') ? tIndex - 1 : -1;
+    indirectTriples[itIndex].arg2 = (arg2[0] == 't') ? tIndex - 1 : -1;
+
+    tIndex++;
+    itIndex++;
+}
+
+// Generate Three-Address Code from postfix
+void generateTAC(char postfix[][10], int postfixLen) {
+    char temp[10];
+
+    for (int i = 0; i < postfixLen; i++) {
+        if (isalnum(postfix[i][0])) {
+            push(postfix[i]);
+        } else {
+            char arg2[10], arg1[10], result[10];
+
+            strcpy(arg2, pop());
+            strcpy(arg1, pop());
+            generateTempVar(result);
+
+            generateQuadruple(postfix[i], arg1, arg2, result);
+            generateTriple(postfix[i], arg1, arg2);
+
+            push(result);
+        }
+    }
+
+    strcpy(quadruples[qIndex - 1].result, "a"); // Assign last temp var to 'a'
+}
+
+// Print quadruples
+void printQuadruples() {
+    printf("\nQuadruples:\n");
+    printf("Index | Operator | Arg1 | Arg2 | Result\n");
+    for (int i = 0; i < qIndex; i++) {
+        printf("%d\t   %s\t   %s\t   %s\t   %s\n", i, quadruples[i].op, quadruples[i].arg1, quadruples[i].arg2, quadruples[i].result);
+    }
+}
+
+// Print triples
+void printTriples() {
+    printf("\nTriples:\n");
+    printf("Index | Operator | Arg1 | Arg2\n");
+    for (int i = 0; i < tIndex; i++) {
+        printf("%d\t   %s\t   %s\t   %s\n", i, triples[i].op, triples[i].arg1, triples[i].arg2);
+    }
+}
+
+// Print indirect triples
+void printIndirectTriples() {
+    printf("\nIndirect Triples:\n");
+    printf("Index | Operator | Arg1 | Arg2\n");
+    for (int i = 0; i < itIndex; i++) {
+        printf("%d\t   %s\t   %d\t   %d\n", 
+            indirectTriples[i].index, 
+            triples[indirectTriples[i].index].op, 
+            indirectTriples[i].arg1, 
+            indirectTriples[i].arg2);
+    }
+}
+
+int main() {
+    char infix[MAX], postfix[MAX][10];
+    int postfixLen = 0;
+
+    printf("Enter an arithmetic expression (without spaces): ");
+    scanf("%s", infix);
+
+    // Convert infix to postfix
+    infixToPostfix(infix, postfix, &postfixLen);
+
+    // Generate Three-Address Code (Quadruples, Triples, Indirect Triples)
+    generateTAC(postfix, postfixLen);
+
+    // Print results
+    printQuadruples();
+    printTriples();
+    printIndirectTriples();
+
+    return 0;
+}
+
